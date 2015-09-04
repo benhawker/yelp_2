@@ -21,17 +21,46 @@ feature 'restaurants' do
 	  end
 	end
 
-	context 'creating restaurants' do
-	  scenario 'prompts user to fill out a form, then displays the new restaurant' do
-	    visit '/restaurants'
+	context "must be signed in" do
+	
+		before :each do
+			sign_in_user_1
+		end
+
+		scenario "user can create restaurant" do
+			visit '/restaurants'
 	    click_link 'Add a restaurant'
 	    fill_in 'Name', with: 'KFC'
 	    click_button 'Create Restaurant'
 	    expect(page).to have_content 'KFC'
 	    expect(current_path).to eq '/restaurants'
-	  end
+		end
 
-	  context 'an invalid restaurant' do
+		context 'creating restaurants' do
+		  scenario 'prompts user to fill out a form, then displays the new restaurant' do
+		    visit '/restaurants'
+		    click_link 'Add a restaurant'
+		    fill_in 'Name', with: 'KFC'
+		    click_button 'Create Restaurant'
+		    expect(page).to have_content 'KFC'
+		    expect(current_path).to eq '/restaurants'
+		  end
+
+		context 'editing restaurants' do
+
+  	before {Restaurant.create name: 'KFC'}
+
+		  scenario 'let a user edit a restaurant' do
+			   visit '/restaurants'
+			   click_link 'Edit KFC'
+			   fill_in 'Name', with: 'Kentucky Fried Chicken'
+			   click_button 'Update Restaurant'
+			   expect(page).to have_content 'Kentucky Fried Chicken'
+			   expect(current_path).to eq '/restaurants'
+		  end
+		end
+
+		context 'an invalid restaurant' do
 	    it 'does not let you submit a name that is too short' do
 	      visit '/restaurants'
 	      click_link 'Add a restaurant'
@@ -42,6 +71,32 @@ feature 'restaurants' do
 	    end
 	  end
 	end
+
+	context 'deleting restaurants' do
+
+  before {Restaurant.create name: 'KFC'}
+
+	  scenario 'removes a restaurant when a user clicks a delete link' do
+	    visit '/restaurants'
+	    click_link 'Delete KFC'
+	    expect(page).not_to have_content 'KFC'
+	    expect(page).to have_content 'Restaurant deleted successfully'
+	  end
+	end	
+end
+
+
+		context "when NOT signed in" do
+			scenario "user CANNOT create restaurant" do
+				visit '/restaurants'
+		    click_link 'Add a restaurant'
+		    expect(page).to have_content "You need to sign in or sign up before continuing"
+		    # expect error message
+		    expect(current_path).to eq '/users/sign_in'
+			end
+		end
+
+
 
 	context 'viewing restaurants' do
 
@@ -56,32 +111,21 @@ feature 'restaurants' do
 
 	end
 
-	context 'editing restaurants' do
 
-  before {Restaurant.create name: 'KFC'}
+	private 
 
-	  scenario 'let a user edit a restaurant' do
-	   visit '/restaurants'
-	   click_link 'Edit KFC'
-	   fill_in 'Name', with: 'Kentucky Fried Chicken'
-	   click_button 'Update Restaurant'
-	   expect(page).to have_content 'Kentucky Fried Chicken'
-	   expect(current_path).to eq '/restaurants'
-	  end
-
+	def sign_in_user_1
+		visit ("/")
+    click_link('Sign up')
+    fill_in('Email', with: 'test@example.com')
+    fill_in('Password', with: 'testtest')
+    fill_in('Password confirmation', with: 'testtest')
+    click_button('Sign up')
 	end
 
-	context 'deleting restaurants' do
-
-  before {Restaurant.create name: 'KFC'}
-
-  scenario 'removes a restaurant when a user clicks a delete link' do
-    visit '/restaurants'
-    click_link 'Delete KFC'
-    expect(page).not_to have_content 'KFC'
-    expect(page).to have_content 'Restaurant deleted successfully'
-  end
-
-end
+	def sign_out
+		visit ("/")
+    click_link('Sign out')
+	end
 
 end
